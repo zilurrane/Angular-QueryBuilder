@@ -1,4 +1,4 @@
-import { FormBuilder, FormControl } from '@angular/forms';
+import { FormBuilder, FormControl, NgForm } from '@angular/forms';
 import { Component } from '@angular/core';
 import { QueryBuilderClassNames, QueryBuilderConfig } from '../../lib';
 
@@ -7,12 +7,40 @@ import { QueryBuilderClassNames, QueryBuilderConfig } from '../../lib';
   template: `
   <h2>Bootstrap</h2>
   <br>
-  <query-builder [(ngModel)]='query' [classNames]='bootstrapClassNames' [config]='currentConfig' [allowRuleset]='allowRuleset' [allowCollapse]='allowCollapse'>
-    <div class="col-auto" *queryInput="let rule; type: 'textarea'">
-      <textarea class="form-control" [(ngModel)]="rule.value"
-        placeholder="Custom Textarea"></textarea>
+  <form #f="ngForm" (ngSubmit)="onSubmit(f)" novalidate>
+  <query-builder name="queryBuilder" [(ngModel)]='query' [classNames]='bootstrapClassNames' [config]='currentConfig' [allowRuleset]='allowRuleset' [allowCollapse]='allowCollapse' [operatorMap]="operatorMap">
+    <div class="col-auto" *queryInput="let field=field; let rule; type: 'textarea'">
+      <textarea [name]="field.name" class="form-control" [(ngModel)]="rule.value"
+        placeholder="Custom Textarea" required></textarea>
+    </div>
+    <div class="col-auto" *queryInput="let field=field; let rule; type: 'string'">
+      <input type="text" [name]="field.name" class="form-control" [(ngModel)]="rule.value"
+        placeholder="Custom Text" required/>
+    </div>
+    <div class="col-auto" *queryInput="let field=field; let rule; type: 'number'">
+      <input type="number" [name]="field.name" class="form-control" [(ngModel)]="rule.value"
+        placeholder="Custom Number" required/>
+    </div>
+    <div class="col-auto" *queryInput="let field=field; let rule; type: 'date'">
+      <input type="date" [name]="field.name" class="form-control" [(ngModel)]="rule.value"
+        placeholder="Custom Date" required/>
+    </div>
+    <div class="col-auto" *queryInput="let field=field; let rule; type: 'boolean'">
+      <input type="checkbox" [name]="field.name" class="form-control" [(ngModel)]="rule.value" required/>
+    </div>
+    <div class="col-auto" *queryInput="let field=field; let options=options; let rule; type: 'category'">
+      <select [name]="field.name" class="form-control" [(ngModel)]="rule.value" required>
+        <option *ngFor="let opt of options" [value]="opt.value">{{ opt.name }}</option>
+      </select>
+    </div>
+    <div class="col-auto" *queryInput="let field=field; let options=options; let rule; type: 'multiselect'">
+      <select multiple [name]="field.name" class="form-control" [(ngModel)]="rule.value" required>
+        <option *ngFor="let opt of options" [value]="opt.value">{{ opt.name }}</option>
+      </select>
     </div>
   </query-builder>
+  <button>Submit</button>
+  </form>
   `,
   styles: [`
   /deep/ html {
@@ -53,6 +81,16 @@ import { QueryBuilderClassNames, QueryBuilderConfig } from '../../lib';
 })
 export class AppComponent {
   public queryCtrl: FormControl;
+
+  public operatorMap: { [key: string]: string[] } = {
+    string: ['=', '!=', 'contains'],
+    number: ['=', '!=', '>', '>=', '<', '<='],
+    time: ['=', '!=', '>', '>=', '<', '<='],
+    date: ['=', '!=', '>', '>=', '<', '<='],
+    category: ['=', '!=', 'in', 'not in'],
+    boolean: ['=']
+  };
+
 
   public bootstrapClassNames: QueryBuilderClassNames = {
     removeIcon: 'fa fa-minus',
@@ -183,5 +221,11 @@ export class AppComponent {
 
   changeDisabled(event: Event) {
     (<HTMLInputElement>event.target).checked ? this.queryCtrl.disable() : this.queryCtrl.enable();
+  }
+
+  onSubmit(f: NgForm) {
+    console.log(f);
+    console.log(f.value);
+    console.log(f.valid);
   }
 }
